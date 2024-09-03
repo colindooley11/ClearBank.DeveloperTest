@@ -20,7 +20,7 @@ namespace ClearBank.DeveloperTest.Services
             else
             {
                 var accountDataStore = new AccountDataStore();
-                account = accountDataStore.GetAccount(request.DebtorAccountNumber);
+                account = GetAccount(request, accountDataStore);
             }
 
             var result = new MakePaymentResult();
@@ -88,6 +88,11 @@ namespace ClearBank.DeveloperTest.Services
             }
 
             return result;
+        }
+
+        protected virtual Account GetAccount(MakePaymentRequest request, AccountDataStore accountDataStore)
+        {
+            return accountDataStore.GetAccount(request.DebtorAccountNumber);
         }
     }
 }
