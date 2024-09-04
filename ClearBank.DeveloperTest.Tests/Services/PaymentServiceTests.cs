@@ -14,12 +14,15 @@ public class PaymentServiceTests
         var result = paymentService.MakePayment(new MakePaymentRequest());
         Assert.False(result.Success);
     }
-
-    [Fact]
-    public void Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful()
+    
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful(bool isBackupBankAccount)
     {
         var paymentService = new PaymentServiceBuilder()
             .WithBacsAccount(1000M)
+            .WithBackupAccount(isBackupBankAccount)
             .Build();
         
         var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.Bacs, Amount = 100M});
@@ -27,11 +30,14 @@ public class PaymentServiceTests
         Assert.Equal(900M, paymentService.AccountSpy.Balance);
     }
 
-    [Fact]
-    public void Given_A_Faster_Payments_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Given_A_Faster_Payments_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful(bool isBackupBankAccount)
     {
         var paymentService = new PaymentServiceBuilder()
             .WithFasterPaymentAccount(1000M)
+            .WithBackupAccount(isBackupBankAccount)
             .Build();
         
         var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.FasterPayments, Amount = 500M });
@@ -39,11 +45,14 @@ public class PaymentServiceTests
         Assert.Equal(500M, paymentService.AccountSpy.Balance);
     }
 
-    [Fact]
-    public void Given_A_Chaps_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_The_Payment_Is_Successful()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Given_A_Chaps_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_The_Payment_Is_Successful(bool isBackupBankAccount)
     {
         var paymentService = new PaymentServiceBuilder()
             .WithChapsAccount(1000M)
+            .WithBackupAccount(isBackupBankAccount)
             .Build();
 
         var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.Chaps, Amount = 800M});
@@ -52,18 +61,6 @@ public class PaymentServiceTests
         Assert.Equal(200M, paymentService.AccountSpy.Balance);
     }
     
-    [Fact]
-    public void Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Backup_Bank_Account_Is_Debited_And_Payment_Is_Successful()
-    {
-        var paymentService = new PaymentServiceBuilder()
-            .WithBacsAccount(1000M)
-            .WithBackupAccount()
-            .Build();
-        
-        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.Bacs, Amount = 100M});
-        Assert.True(result.Success);
-        Assert.Equal(900M, paymentService.AccountSpy.Balance);
-    }
 
     private class PaymentServiceBuilder
     {
@@ -101,9 +98,9 @@ public class PaymentServiceTests
             return this;
         }
 
-        public PaymentServiceBuilder WithBackupAccount()
+        public PaymentServiceBuilder WithBackupAccount(bool isBackupAccount)
         {
-            _isBackupAccount = true;
+            _isBackupAccount = isBackupAccount;
             return this;
         }
 
