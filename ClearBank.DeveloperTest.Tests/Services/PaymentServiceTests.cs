@@ -27,15 +27,15 @@ public class PaymentServiceTests
     }
 
     [Fact]
-    public void Given_A_Faster_Payments_Payment_Request_When_Making_A_Payment_Then_The_Payment_Is_Successful()
+    public void Given_A_Faster_Payments_Payment_Request_When_Making_A_Payment_Then_The_Bank_Accouunt_Is_Debited_And_Payment_Is_Successful()
     {
         var paymentService = new PaymentServiceBuilder()
-            .WithFasterPaymentAccount()
+            .WithFasterPaymentAccount(1000M)
             .Build();
         
         var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.FasterPayments, Amount = 500M });
         Assert.True(result.Success);
-        
+        Assert.Equal(500M, paymentService._accountSpy.Balance);
     }
 
     [Fact]
