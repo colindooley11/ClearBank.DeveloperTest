@@ -10,7 +10,7 @@ public class PaymentServiceTests
     [Fact]
     public void Given_An_Incomplete_Payment_Request_When_Making_A_Payment_Then_The_Payment_Is_Not_Successful()
     {
-        var paymentService = new PaymentService();
+        var paymentService = new PaymentService(new AccountValidator());
         var result = paymentService.MakePayment(new MakePaymentRequest());
         Assert.False(result.Success);
     }
@@ -137,7 +137,7 @@ public class PaymentServiceTests
         private readonly bool _isBackupAccount;
         public Account AccountSpy; 
 
-        public TestablePaymentService(Account account, bool isBackupAccount)
+        public TestablePaymentService(Account account, bool isBackupAccount) : base(new AccountValidator())
         {
             _account = account;
             _isBackupAccount = isBackupAccount;

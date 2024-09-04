@@ -6,9 +6,11 @@ namespace ClearBank.DeveloperTest.Services
 {
     public class PaymentService : IPaymentService
     {
-        public PaymentService()
+        private readonly AccountValidator _accountValidator;
+
+        public PaymentService(AccountValidator accountValidator)
         {
-            
+            _accountValidator = accountValidator;
         }
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
@@ -27,13 +29,9 @@ namespace ClearBank.DeveloperTest.Services
                 account = GetAccount(request, accountDataStore);
             }
 
-            var result = new MakePaymentResult();
+            var makePaymentResult  = _accountValidator.IsAccountValidForRequest(request, account);
 
-            result.Success = true;
-            
-            IsAccountEligibleForPaymentScheme(request, account, result);
-
-            if (result.Success)
+            if (PaymentCanBeMade(makePaymentResult))
             {
                 account.Balance -= request.Amount;
 
@@ -49,71 +47,12 @@ namespace ClearBank.DeveloperTest.Services
                 }
             }
 
-            return result;
+            return makePaymentResult;
         }
 
-        private void IsAccountEligibleForPaymentScheme(MakePaymentRequest request, Account account, MakePaymentResult result)
+        private static bool PaymentCanBeMade(MakePaymentResult result)
         {
-            switch (request.PaymentScheme)
-            {
-                case PaymentScheme.Bacs:
-                    IsBacsEligble(account, result);
-                    break;
-
-                case PaymentScheme.FasterPayments:
-                    IsFasterPaymentsEligible(request, account, result);
-                    break;
-
-                case PaymentScheme.Chaps:
-                    IsChapsEligible(account, result);
-                    break;
-            }
-        }
-
-        private static void IsBacsEligble(Account account, MakePaymentResult result)
-        {
-            if (account == null)
-            {
-                result.Success = false;
-            }
-            else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
-            {
-                result.Success = false;
-            }
-        }
-
-        private static void IsChapsEligible(Account account, MakePaymentResult result)
-        {
-            if (account == null)
-            {
-                result.Success = false;
-            }
-            else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps))
-            {
-                result.Success = false;
-            }
-            else if (account.Status != AccountStatus.Live)
-            {
-                result.Success = false;
-            }
-
-            return;
-        }
-
-        private static void IsFasterPaymentsEligible(MakePaymentRequest request, Account account, MakePaymentResult result)
-        {
-            if (account == null)
-            {
-                result.Success = false;
-            }
-            else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments))
-            {
-                result.Success = false;
-            }
-            else if (account.Balance < request.Amount)
-            {
-                result.Success = false;
-            }
+            return result.Success;
         }
 
         protected virtual void UpdateBackupBankAccount(BackupAccountDataStore accountDataStore, Account account)
