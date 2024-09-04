@@ -6,6 +6,10 @@ namespace ClearBank.DeveloperTest.Services
 {
     public class PaymentService : IPaymentService
     {
+        public PaymentService()
+        {
+            
+        }
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
             var dataStoreType = GetDataStoreType();
@@ -27,49 +31,7 @@ namespace ClearBank.DeveloperTest.Services
 
             result.Success = true;
             
-            switch (request.PaymentScheme)
-            {
-                case PaymentScheme.Bacs:
-                    if (account == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
-                    {
-                        result.Success = false;
-                    }
-                    break;
-
-                case PaymentScheme.FasterPayments:
-                    if (account == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments))
-                    {
-                        result.Success = false;
-                    }
-                    else if (account.Balance < request.Amount)
-                    {
-                        result.Success = false;
-                    }
-                    break;
-
-                case PaymentScheme.Chaps:
-                    if (account == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps))
-                    {
-                        result.Success = false;
-                    }
-                    else if (account.Status != AccountStatus.Live)
-                    {
-                        result.Success = false;
-                    }
-                    break;
-            }
+            IsAccountEligibleForPaymentScheme(request, account, result);
 
             if (result.Success)
             {
@@ -88,6 +50,70 @@ namespace ClearBank.DeveloperTest.Services
             }
 
             return result;
+        }
+
+        private void IsAccountEligibleForPaymentScheme(MakePaymentRequest request, Account account, MakePaymentResult result)
+        {
+            switch (request.PaymentScheme)
+            {
+                case PaymentScheme.Bacs:
+                    IsBacsEligble(account, result);
+                    break;
+
+                case PaymentScheme.FasterPayments:
+                    IsFasterPaymentsEligible(request, account, result);
+                    break;
+
+                case PaymentScheme.Chaps:
+                    IsChapsEligible(account, result);
+                    break;
+            }
+        }
+
+        private static void IsBacsEligble(Account account, MakePaymentResult result)
+        {
+            if (account == null)
+            {
+                result.Success = false;
+            }
+            else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
+            {
+                result.Success = false;
+            }
+        }
+
+        private static void IsChapsEligible(Account account, MakePaymentResult result)
+        {
+            if (account == null)
+            {
+                result.Success = false;
+            }
+            else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps))
+            {
+                result.Success = false;
+            }
+            else if (account.Status != AccountStatus.Live)
+            {
+                result.Success = false;
+            }
+
+            return;
+        }
+
+        private static void IsFasterPaymentsEligible(MakePaymentRequest request, Account account, MakePaymentResult result)
+        {
+            if (account == null)
+            {
+                result.Success = false;
+            }
+            else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments))
+            {
+                result.Success = false;
+            }
+            else if (account.Balance < request.Amount)
+            {
+                result.Success = false;
+            }
         }
 
         protected virtual void UpdateBackupBankAccount(BackupAccountDataStore accountDataStore, Account account)
