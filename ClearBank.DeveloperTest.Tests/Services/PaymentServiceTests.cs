@@ -60,8 +60,23 @@ public class PaymentServiceTests
         Assert.True(result.Success);
         Assert.Equal(200M, paymentService.AccountSpy.Balance);
     }
-    
 
+    [Theory]
+    [InlineData(PaymentScheme.Bacs)]
+    [InlineData(PaymentScheme.FasterPayments)]
+    [InlineData(PaymentScheme.Chaps)]
+    public void Given_A_Payment_Request_When_It_There_Is_No_Associate_Account_An_Account_Then_The_Payment_Is_Not_Successful(PaymentScheme paymentScheme)
+    {
+        var paymentService = new PaymentServiceBuilder()
+            .WithNoAccount()
+            .Build();
+
+        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = paymentScheme});
+
+        Assert.False(result.Success);
+       
+    }
+    
     private class PaymentServiceBuilder
     {
         private Account _account;
@@ -101,6 +116,12 @@ public class PaymentServiceTests
         public PaymentServiceBuilder WithBackupAccount(bool isBackupAccount)
         {
             _isBackupAccount = isBackupAccount;
+            return this;
+        }
+        
+        public PaymentServiceBuilder WithNoAccount()
+        {
+            _account = null;
             return this;
         }
 
