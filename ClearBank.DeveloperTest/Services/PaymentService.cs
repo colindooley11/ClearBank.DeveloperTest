@@ -83,11 +83,16 @@ namespace ClearBank.DeveloperTest.Services
                 else
                 {
                     var accountDataStore = new AccountDataStore();
-                    accountDataStore.UpdateAccount(account);
+                    UpdateAccount(accountDataStore, account);
                 }
             }
 
             return result;
+        }
+
+        protected virtual void UpdateAccount(AccountDataStore accountDataStore, Account account)
+        {
+            accountDataStore.UpdateAccount(account);
         }
 
         protected virtual Account GetAccount(MakePaymentRequest request, AccountDataStore accountDataStore)

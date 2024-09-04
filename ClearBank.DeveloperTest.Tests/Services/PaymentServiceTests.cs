@@ -15,14 +15,15 @@ public class PaymentServiceTests
     }
 
     [Fact]
-    public void Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Payment_Is_Successful()
+    public void Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful()
     {
         var paymentService = new PaymentServiceBuilder()
-            .WithBacsAccount()
+            .WithBacsAccount(1000M)
             .Build();
         
-        var result = paymentService.MakePayment(new MakePaymentRequest() { PaymentScheme = PaymentScheme.Bacs });
+        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.Bacs, Amount = 100M});
         Assert.True(result.Success);
+        Assert.Equal(900M, paymentService._accountSpy.Balance);
     }
 
     [Fact]
@@ -34,6 +35,7 @@ public class PaymentServiceTests
         
         var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.FasterPayments, Amount = 500M });
         Assert.True(result.Success);
+        
     }
 
     [Fact]
@@ -52,9 +54,13 @@ public class PaymentServiceTests
     {
         private Account _account;
 
-        public PaymentServiceBuilder WithBacsAccount()
+        public PaymentServiceBuilder WithBacsAccount(decimal balance)
         {
-            _account = new Account { AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs };
+            _account = new Account
+            {
+                AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs,
+                Balance = balance
+            };
             return this;
         }
 
@@ -87,6 +93,7 @@ public class PaymentServiceTests
     private class TestablePaymentService : PaymentService
     {
         private readonly Account _account;
+        public Account _accountSpy; 
 
         public TestablePaymentService(Account account)
         {
@@ -96,6 +103,11 @@ public class PaymentServiceTests
         protected override Account GetAccount(MakePaymentRequest request, AccountDataStore accountDataStore)
         {
             return _account;
+        }
+
+        protected override void UpdateAccount(AccountDataStore accountDataStore, Account account)
+        {
+            _accountSpy = account;
         }
     }
 }
