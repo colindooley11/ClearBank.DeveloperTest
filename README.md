@@ -1,13 +1,11 @@
 # ClearBank.DeveloperTest
-Clear bank legacy refactoring exercise
-
-
-Refactoring code exercise - Colin Dooley
+ClearBank refactoring exercise
 
 ### Approach
-Get some tests around it all,  
-1 approach is to get tests around the entire lot and ONLY then -  start refactoring, as advocated by Michael Feathers and Sandro Mancuso
-Non backup datastore  is on the shallowest code branches, so tests are added around this  and so this seems…. A good as place as any to go first
+Get some tests around it all... :) ,  
+
+1 approach I have used to characterise legacy/unknown code is to get tests around the entire lot and ONLY then -  start refactoring, as taught by Michael Feathers and Sandro Mancuso
+The default datastore (e.g. not the Backup one) is on the shallowest code branches, so tests are added to be started here around this. Seems a good as place as any to start off...
 
 It is immediately obvious this code/service is hard to test and has hardcoded dependencies, which will be addressed in due course
  Boiler Plate commits…and then…
