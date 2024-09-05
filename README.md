@@ -29,9 +29,14 @@ Now Refactor from the deepest code branch to pull out all the dependencies....
 4. Commit 13 - Inverted dependencies - added test where coverage was missing - Some isolated unit tests but aim is to be as sociable as possible to avoid this - for happy path at least…
 5. Commit 14 - Had a play with moving balance update to AccountService - perhaps this is too much 
 
+Tidy up
+6. Commit 15 - Some refactoring and renaming, realised call to "command" wasn't verified
+
 ### Some Notes
 - I have used the test isolation framework Moq sparingly and instead favoured using Exract and Override nearly until the end where I then killed of the "TestablePaymentService" I'd created
-- I considered libraries such as BDDFy and can discuss benefits of this (I have other code tests :) to show you if needs be :)) 
+- I considered libraries such as BDDFy and can discuss benefits of this (I have other code tests :) to show you if needs be :))
 - Sad paths and error handling are virtually non-existent
 - The Backup Data Store vs Normal Data store, prolly not great to have this only decided with a config manager var
-- Thanks for the opportunity - this was good practice for me whatever happens :) 
+- Following Fowler's microservices testing then the Data Store would likely have tight integration tests, and the Payment Service exercised via a Component Test.
+- There is more than 1 assert per test case. I try to limit these to assertions related to the behaviour under test.
+- Thanks for the opportunity - this was good practice for me whatever happens :)

@@ -12,6 +12,29 @@ public class PaymentServiceTests
 {
     [Fact]
     public void
+        Given_An_Invalid_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Not_Debited_And_Payment_Is_Not_Successful()
+    {
+        var account = new Account
+        {
+            AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs,
+            Balance = 1000M
+        };
+        var accountDataStoreSpy = new AccountDataStoreSpy(account);
+
+        var paymentService = new PaymentServiceBuilder()
+            .WithAccountDataStoreSpy(accountDataStoreSpy)
+            .Build();
+
+        var result = paymentService.MakePayment(new MakePaymentRequest());
+        
+        Assert.False(result.Success);
+        Assert.Equal(1000M, account.Balance);
+        Assert.False(accountDataStoreSpy.AccountUpdated);
+    }
+
+
+    [Fact]
+    public void
         Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful()
     {
         var account = new Account
@@ -19,15 +42,18 @@ public class PaymentServiceTests
             AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs,
             Balance = 1000M
         };
+        var accountDataStoreSpy = new AccountDataStoreSpy(account);
 
         var paymentService = new PaymentServiceBuilder()
-            .WithAccount(account)
+            .WithAccountDataStoreSpy(accountDataStoreSpy)
             .Build();
 
         var result = paymentService.MakePayment(new MakePaymentRequest
             { PaymentScheme = PaymentScheme.Bacs, Amount = 100M });
+        
         Assert.True(result.Success);
         Assert.Equal(900M, account.Balance);
+        Assert.True(accountDataStoreSpy.AccountUpdated);
     }
 
     [Fact]
@@ -40,14 +66,18 @@ public class PaymentServiceTests
             Balance = 1000M
         };
 
+        var accountDataStoreSpy = new AccountDataStoreSpy(account);
+
         var paymentService = new PaymentServiceBuilder()
-            .WithAccount(account)
+            .WithAccountDataStoreSpy(accountDataStoreSpy)
             .Build();
 
         var result = paymentService.MakePayment(new MakePaymentRequest
             { PaymentScheme = PaymentScheme.FasterPayments, Amount = 500M });
+        
         Assert.True(result.Success);
         Assert.Equal(500M, account.Balance);
+        Assert.True(accountDataStoreSpy.AccountUpdated);
     }
 
     [Fact]
@@ -61,8 +91,10 @@ public class PaymentServiceTests
             Balance = 1000M
         };
 
+        var accountDataStoreSpy = new AccountDataStoreSpy(account);
+
         var paymentService = new PaymentServiceBuilder()
-            .WithAccount(account)
+            .WithAccountDataStoreSpy(accountDataStoreSpy)
             .Build();
 
         var result = paymentService.MakePayment(new MakePaymentRequest
@@ -70,7 +102,9 @@ public class PaymentServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(200M, account.Balance);
+        Assert.True(accountDataStoreSpy.AccountUpdated);
     }
+
 
     [Theory]
     [InlineData(PaymentScheme.Bacs)]
@@ -91,17 +125,17 @@ public class PaymentServiceTests
 
     private class PaymentServiceBuilder
     {
-        private Account _account;
-
-        public PaymentServiceBuilder WithAccount(Account account)
-        {
-            _account = account;
-            return this;
-        }
+        private IAccountDataStore _accountDataStoreSpy;
 
         public PaymentServiceBuilder WithNoAccount()
         {
-            _account = null;
+            _accountDataStoreSpy = new AccountDataStoreSpy(null);
+            return this;
+        }
+
+        public PaymentServiceBuilder WithAccountDataStoreSpy(IAccountDataStore accountDataStoreSpy)
+        {
+            _accountDataStoreSpy = accountDataStoreSpy;
             return this;
         }
 
@@ -110,7 +144,7 @@ public class PaymentServiceTests
             var accountDataStoreFactory =
                 new Mock<IAccountDataStoreFactory>();
             accountDataStoreFactory.Setup(factory => factory.GetAccountDataStore(It.IsAny<string>()))
-                .Returns(new AccountDataStoreStub(_account));
+                .Returns(_accountDataStoreSpy);
 
             return new PaymentService(
                 new AccountValidator(),
@@ -120,15 +154,15 @@ public class PaymentServiceTests
 
     private class DummyDataStoreConfiguration : IDataStoreConfiguration
     {
-        public string DataStoreType { get; } = "Dummy";
+        public string DataStoreType => "Dummy";
     }
 
-    private class AccountDataStoreStub : IAccountDataStore
+    private class AccountDataStoreSpy : IAccountDataStore
     {
-        public Account UpdatedAccount;
-        private Account _retrievedAccount;
+        public bool AccountUpdated;
+        private readonly Account _retrievedAccount;
 
-        public AccountDataStoreStub(Account account)
+        public AccountDataStoreSpy(Account account)
         {
             _retrievedAccount = account;
         }
@@ -140,7 +174,7 @@ public class PaymentServiceTests
 
         public void UpdateAccount(Account account)
         {
-            UpdatedAccount = account;
+            AccountUpdated = true;
         }
     }
 }
