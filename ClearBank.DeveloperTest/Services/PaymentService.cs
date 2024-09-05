@@ -1,83 +1,36 @@
-﻿using ClearBank.DeveloperTest.Data;
+﻿using System;
+using ClearBank.DeveloperTest.AccountValidation;
 using ClearBank.DeveloperTest.Types;
-using System.Configuration;
 
-namespace ClearBank.DeveloperTest.Services
+namespace ClearBank.DeveloperTest.Services;
+
+public class PaymentService : IPaymentService
 {
-    public class PaymentService : IPaymentService
+    private readonly IAccountValidator _accountValidator;
+    private readonly IAccountService _accountService;
+
+    public PaymentService(IAccountValidator accountValidator, IAccountService accountService)
     {
-        private readonly AccountValidator _accountValidator;
+        _accountValidator = accountValidator ?? throw new ArgumentNullException(nameof(accountValidator));
+        _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
+    }
 
-        public PaymentService(AccountValidator accountValidator)
+    public MakePaymentResult MakePayment(MakePaymentRequest request)
+    {
+        var account = _accountService.GetAccount(request.DebtorAccountNumber);
+        var makePaymentResult = _accountValidator.IsAccountValidForPayment(request, account);
+
+        if (PaymentCanBeMade(makePaymentResult))
         {
-            _accountValidator = accountValidator;
-        }
-        public MakePaymentResult MakePayment(MakePaymentRequest request)
-        {
-            var dataStoreType = GetDataStoreType();
-
-            Account account = null;
-
-            if (dataStoreType == "Backup")
-            {
-                var accountDataStore = new BackupAccountDataStore();
-                account = GetBackupAccount(request, accountDataStore);
-            }
-            else
-            {
-                var accountDataStore = new AccountDataStore();
-                account = GetAccount(request, accountDataStore);
-            }
-
-            var makePaymentResult  = _accountValidator.IsAccountValidForRequest(request, account);
-
-            if (PaymentCanBeMade(makePaymentResult))
-            {
-                account.Balance -= request.Amount;
-
-                if (dataStoreType == "Backup")
-                {
-                    var accountDataStore = new BackupAccountDataStore();
-                    UpdateBackupBankAccount(accountDataStore, account);
-                }
-                else
-                {
-                    var accountDataStore = new AccountDataStore();
-                    UpdateAccount(accountDataStore, account);
-                }
-            }
-
-            return makePaymentResult;
+            account.Balance -= request.Amount;
+            _accountService.UpdateAccount(account);
         }
 
-        private static bool PaymentCanBeMade(MakePaymentResult result)
-        {
-            return result.Success;
-        }
+        return makePaymentResult;
+    }
 
-        protected virtual void UpdateBackupBankAccount(BackupAccountDataStore accountDataStore, Account account)
-        {
-            accountDataStore.UpdateAccount(account);
-        }
-
-        protected virtual string GetDataStoreType()
-        {
-            return ConfigurationManager.AppSettings["DataStoreType"];
-        }
-
-        protected virtual Account GetBackupAccount(MakePaymentRequest request, BackupAccountDataStore accountDataStore)
-        {
-            return accountDataStore.GetAccount(request.DebtorAccountNumber);
-        }
-
-        protected virtual void UpdateAccount(AccountDataStore accountDataStore, Account account)
-        {
-            accountDataStore.UpdateAccount(account);
-        }
-
-        protected virtual Account GetAccount(MakePaymentRequest request, AccountDataStore accountDataStore)
-        {
-            return accountDataStore.GetAccount(request.DebtorAccountNumber);
-        }
+    private static bool PaymentCanBeMade(MakePaymentResult result)
+    {
+        return result.Success;
     }
 }

@@ -1,10 +1,10 @@
 using ClearBank.DeveloperTest.Types;
 
-namespace ClearBank.DeveloperTest.Services;
+namespace ClearBank.DeveloperTest.AccountValidation;
 
 public class AccountValidator : IAccountValidator
 {
-    public MakePaymentResult IsAccountValidForRequest(MakePaymentRequest request, Account account)
+    public MakePaymentResult IsAccountValidForPayment(MakePaymentRequest request, Account account)
     {
         return request.PaymentScheme switch
         {
@@ -27,7 +27,7 @@ public class AccountValidator : IAccountValidator
             result.Success = false;
         }
 
-        return result; 
+        return result;
     }
 
     private MakePaymentResult IsChapsEligible(Account account)
@@ -51,7 +51,7 @@ public class AccountValidator : IAccountValidator
 
     private MakePaymentResult IsFasterPaymentsEligible(MakePaymentRequest request, Account account)
     {
-        var result = new MakePaymentResult { Success = true};
+        var result = new MakePaymentResult { Success = true };
         if (account == null)
         {
             result.Success = false;
@@ -67,5 +67,4 @@ public class AccountValidator : IAccountValidator
 
         return result;
     }
-   
 }

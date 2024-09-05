@@ -1,6 +1,9 @@
+using ClearBank.DeveloperTest.AccountValidation;
+using ClearBank.DeveloperTest.Configuration;
 using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Services;
 using ClearBank.DeveloperTest.Types;
+using Moq;
 using Xunit;
 
 namespace ClearBank.DeveloperTest.Tests.Services;
@@ -8,164 +11,136 @@ namespace ClearBank.DeveloperTest.Tests.Services;
 public class PaymentServiceTests
 {
     [Fact]
-    public void Given_An_Incomplete_Payment_Request_When_Making_A_Payment_Then_The_Payment_Is_Not_Successful()
+    public void
+        Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful()
     {
-        var paymentService = new PaymentService(new AccountValidator());
-        var result = paymentService.MakePayment(new MakePaymentRequest());
-        Assert.False(result.Success);
-    }
-    
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void Given_A_Bacs_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful(bool isBackupBankAccount)
-    {
-        var paymentService = new PaymentServiceBuilder()
-            .WithBacsAccount(1000M)
-            .WithBackupAccount(isBackupBankAccount)
-            .Build();
-        
-        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.Bacs, Amount = 100M});
-        Assert.True(result.Success);
-        Assert.Equal(900M, paymentService.AccountSpy.Balance);
-    }
+        var account = new Account
+        {
+            AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs,
+            Balance = 1000M
+        };
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void Given_A_Faster_Payments_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful(bool isBackupBankAccount)
-    {
         var paymentService = new PaymentServiceBuilder()
-            .WithFasterPaymentAccount(1000M)
-            .WithBackupAccount(isBackupBankAccount)
-            .Build();
-        
-        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.FasterPayments, Amount = 500M });
-        Assert.True(result.Success);
-        Assert.Equal(500M, paymentService.AccountSpy.Balance);
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void Given_A_Chaps_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_The_Payment_Is_Successful(bool isBackupBankAccount)
-    {
-        var paymentService = new PaymentServiceBuilder()
-            .WithChapsAccount(1000M)
-            .WithBackupAccount(isBackupBankAccount)
+            .WithAccount(account)
             .Build();
 
-        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = PaymentScheme.Chaps, Amount = 800M});
+        var result = paymentService.MakePayment(new MakePaymentRequest
+            { PaymentScheme = PaymentScheme.Bacs, Amount = 100M });
+        Assert.True(result.Success);
+        Assert.Equal(900M, account.Balance);
+    }
+
+    [Fact]
+    public void
+        Given_A_Faster_Payments_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_Payment_Is_Successful()
+    {
+        var account = new Account
+        {
+            AllowedPaymentSchemes = AllowedPaymentSchemes.FasterPayments,
+            Balance = 1000M
+        };
+
+        var paymentService = new PaymentServiceBuilder()
+            .WithAccount(account)
+            .Build();
+
+        var result = paymentService.MakePayment(new MakePaymentRequest
+            { PaymentScheme = PaymentScheme.FasterPayments, Amount = 500M });
+        Assert.True(result.Success);
+        Assert.Equal(500M, account.Balance);
+    }
+
+    [Fact]
+    public void
+        Given_A_Chaps_Payment_Request_When_Making_A_Payment_Then_The_Bank_Account_Is_Debited_And_The_Payment_Is_Successful()
+    {
+        var account = new Account
+        {
+            AllowedPaymentSchemes = AllowedPaymentSchemes.Chaps,
+            Status = AccountStatus.Live,
+            Balance = 1000M
+        };
+
+        var paymentService = new PaymentServiceBuilder()
+            .WithAccount(account)
+            .Build();
+
+        var result = paymentService.MakePayment(new MakePaymentRequest
+            { PaymentScheme = PaymentScheme.Chaps, Amount = 800M });
 
         Assert.True(result.Success);
-        Assert.Equal(200M, paymentService.AccountSpy.Balance);
+        Assert.Equal(200M, account.Balance);
     }
 
     [Theory]
     [InlineData(PaymentScheme.Bacs)]
     [InlineData(PaymentScheme.FasterPayments)]
     [InlineData(PaymentScheme.Chaps)]
-    public void Given_A_Payment_Request_When_It_There_Is_No_Associate_Account_An_Account_Then_The_Payment_Is_Not_Successful(PaymentScheme paymentScheme)
+    public void
+        Given_A_Payment_Request_When_It_There_Is_No_Associate_Account_An_Account_Then_The_Payment_Is_Not_Successful(
+            PaymentScheme paymentScheme)
     {
         var paymentService = new PaymentServiceBuilder()
             .WithNoAccount()
             .Build();
 
-        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = paymentScheme});
+        var result = paymentService.MakePayment(new MakePaymentRequest { PaymentScheme = paymentScheme });
 
         Assert.False(result.Success);
-       
     }
-    
+
     private class PaymentServiceBuilder
     {
         private Account _account;
-        private bool _isBackupAccount;
 
-        public PaymentServiceBuilder WithBacsAccount(decimal balance)
+        public PaymentServiceBuilder WithAccount(Account account)
         {
-            _account = new Account
-            {
-                AllowedPaymentSchemes = AllowedPaymentSchemes.Bacs,
-                Balance = balance
-            };
+            _account = account;
             return this;
         }
 
-        public PaymentServiceBuilder WithChapsAccount(decimal balance, AccountStatus accountStatus = AccountStatus.Live)
-        {
-            _account = new Account
-            {
-                AllowedPaymentSchemes = AllowedPaymentSchemes.Chaps,
-                Status = accountStatus,
-                Balance = balance
-            };
-            return this;
-        }
-
-        public PaymentServiceBuilder WithFasterPaymentAccount(decimal balance)
-        {
-            _account = new Account
-            {
-                AllowedPaymentSchemes = AllowedPaymentSchemes.FasterPayments,
-                Balance = balance
-            };
-            return this;
-        }
-
-        public PaymentServiceBuilder WithBackupAccount(bool isBackupAccount)
-        {
-            _isBackupAccount = isBackupAccount;
-            return this;
-        }
-        
         public PaymentServiceBuilder WithNoAccount()
         {
             _account = null;
             return this;
         }
 
-        public TestablePaymentService Build()
+        public PaymentService Build()
         {
-            return new TestablePaymentService(_account, _isBackupAccount);
+            var accountDataStoreFactory =
+                new Mock<IAccountDataStoreFactory>();
+            accountDataStoreFactory.Setup(factory => factory.GetAccountDataStore(It.IsAny<string>()))
+                .Returns(new TestableAccountDataStore(_account));
+
+            return new PaymentService(
+                new AccountValidator(),
+                new AccountService(accountDataStoreFactory.Object, new TestableConfiguration()));
         }
     }
 
-    private class TestablePaymentService : PaymentService
+    private class TestableConfiguration : IDataStoreConfiguration
     {
-        private readonly Account _account;
-        private readonly bool _isBackupAccount;
-        public Account AccountSpy; 
+        public string DataStoreType { get; } = "Dummy";
+    }
 
-        public TestablePaymentService(Account account, bool isBackupAccount) : base(new AccountValidator())
+    private class TestableAccountDataStore : IAccountDataStore
+    {
+        public Account UpdatedAccount;
+        private Account _retrievedAccount;
+
+        public TestableAccountDataStore(Account account)
         {
-            _account = account;
-            _isBackupAccount = isBackupAccount;
+            _retrievedAccount = account;
         }
 
-        protected override string GetDataStoreType()
+        public Account GetAccount(string accountNumber)
         {
-            return _isBackupAccount ? "Backup" : string.Empty;
+            return _retrievedAccount;
         }
 
-        protected override Account GetAccount(MakePaymentRequest request, AccountDataStore accountDataStore)
+        public void UpdateAccount(Account account)
         {
-            return _account;
-        }
-
-        protected override Account GetBackupAccount(MakePaymentRequest request, BackupAccountDataStore accountDataStore)
-        {
-            return _account;
-        }
-
-        protected override void UpdateAccount(AccountDataStore accountDataStore, Account account)
-        {
-            AccountSpy = account;
-        }
-
-        protected override void UpdateBackupBankAccount(BackupAccountDataStore accountDataStore, Account account)
-        {
-            AccountSpy = account;
+            UpdatedAccount = account;
         }
     }
 }
