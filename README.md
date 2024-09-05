@@ -1,6 +1,15 @@
 # ClearBank.DeveloperTest
 ClearBank refactoring exercise
 
+### Executing Tests
+Please run:
+
+```dotnet clean```
+
+```dotnet build```
+
+```dotnet test```
+
 ### Approach
 Get some tests around it all... :) ,  
 
@@ -27,7 +36,7 @@ Now Refactor from the deepest code branch to pull out all the dependencies....
 2. Commit 11 -  Refactor to improve naming, move files about for eligibility checking
 3. Commit 12 -  A Bit more refactoring  - now moving back to service to refactor AccountDataStore selection
 4. Commit 13 - Inverted dependencies - added test where coverage was missing - Some isolated unit tests but aim is to be as sociable as possible to avoid this - for happy path at least…
-5. Commit 14 - Had a play with moving balance update to AccountService - perhaps this is too much 
+5. Commit 14 - Had a play with moving balance update to AccountService - perhaps this is too much
 
 Tidy up
 6. Commit 15 - Some refactoring and renaming, realised call to "command" wasn't verified
