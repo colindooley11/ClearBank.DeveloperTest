@@ -28,7 +28,7 @@ public class PaymentService : IPaymentService
         return makePaymentResult;
     }
 
-    private static bool PaymentCanBeMade(MakePaymentResult result)
+    private bool PaymentCanBeMade(MakePaymentResult result)
     {
         return result.Success;
     }
