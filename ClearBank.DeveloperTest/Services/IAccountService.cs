@@ -6,5 +6,5 @@ public interface IAccountService
 {
     public Account GetAccount(string accountNumber);
     
-    public void UpdateAccount(Account account);
+    public void UpdateAccountBalance(Account account, decimal amount);
 }

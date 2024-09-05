@@ -110,25 +110,25 @@ public class PaymentServiceTests
             var accountDataStoreFactory =
                 new Mock<IAccountDataStoreFactory>();
             accountDataStoreFactory.Setup(factory => factory.GetAccountDataStore(It.IsAny<string>()))
-                .Returns(new TestableAccountDataStore(_account));
+                .Returns(new AccountDataStoreStub(_account));
 
             return new PaymentService(
                 new AccountValidator(),
-                new AccountService(accountDataStoreFactory.Object, new TestableConfiguration()));
+                new AccountService(accountDataStoreFactory.Object, new DummyDataStoreConfiguration()));
         }
     }
 
-    private class TestableConfiguration : IDataStoreConfiguration
+    private class DummyDataStoreConfiguration : IDataStoreConfiguration
     {
         public string DataStoreType { get; } = "Dummy";
     }
 
-    private class TestableAccountDataStore : IAccountDataStore
+    private class AccountDataStoreStub : IAccountDataStore
     {
         public Account UpdatedAccount;
         private Account _retrievedAccount;
 
-        public TestableAccountDataStore(Account account)
+        public AccountDataStoreStub(Account account)
         {
             _retrievedAccount = account;
         }

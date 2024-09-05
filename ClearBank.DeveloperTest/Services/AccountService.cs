@@ -22,8 +22,9 @@ public class AccountService : IAccountService
         return _accountDataStore.GetAccount(accountNumber);
     }
 
-    public void UpdateAccount(Account account)
+    public void UpdateAccountBalance(Account account, decimal amount)
     {
+        account.Balance -= amount;
         _accountDataStore.UpdateAccount(account);
     }
 }

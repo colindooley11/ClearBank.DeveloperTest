@@ -18,12 +18,11 @@ public class PaymentService : IPaymentService
     public MakePaymentResult MakePayment(MakePaymentRequest request)
     {
         var account = _accountService.GetAccount(request.DebtorAccountNumber);
-        var makePaymentResult = _accountValidator.IsAccountValidForPayment(request, account);
+        var makePaymentResult = _accountValidator.IsAccountValidForPayment(account, request);
 
         if (PaymentCanBeMade(makePaymentResult))
         {
-            account.Balance -= request.Amount;
-            _accountService.UpdateAccount(account);
+            _accountService.UpdateAccountBalance(account, request.Amount);
         }
 
         return makePaymentResult;

@@ -4,7 +4,7 @@ namespace ClearBank.DeveloperTest.AccountValidation;
 
 public class AccountValidator : IAccountValidator
 {
-    public MakePaymentResult IsAccountValidForPayment(MakePaymentRequest request, Account account)
+    public MakePaymentResult IsAccountValidForPayment(Account account, MakePaymentRequest request)
     {
         return request.PaymentScheme switch
         {
