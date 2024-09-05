@@ -30,8 +30,8 @@ Now Refactor from the deepest code branch to pull out all the dependencies....
 5. Commit 14 - Had a play with moving balance update to AccountService - perhaps this is too much 
 
 ### Some Notes
-- I have used the test isolation framework Mock sparingly
-- I considered libraries such as BDDFy and can discuss benefits of this
+- I have used the test isolation framework Moq sparingly and instead favoured using Exract and Override nearly until the end where I then killed of the "TestablePaymentService" I'd created
+- I considered libraries such as BDDFy and can discuss benefits of this (I have other code tests :) to show you if needs be :)) 
 - Sad paths and error handling are virtually non-existent
-- The Backup Data Store vs Normal Data store decided at deploy time (configuration manager variable) is sub-optimal and not dynamic enough
+- The Backup Data Store vs Normal Data store, prolly not great to have this only decided with a config manager var
 - Thanks for the opportunity - this was good practice for me whatever happens :) 
