@@ -1,6 +1,20 @@
 # ClearBank.DeveloperTest
 ClearBank refactoring exercise
 
+## EDIT: Extra notes
+1  This submisson was a *fail*, use it as an example of what not to do.
+As a refactor and not a redesign my approach was to first methodically add test coverage, sociably first and then begin to refactor.  I spent more effort on adding tests including adding a testable sut and eventually removing this, than on the consequent refactor.  
+2 I stopped refactoring when I reached about 3 hours of effort. The refactor I have done, explicitly organises the implementation to expose certain characteristics of SOLID. SRP, Open Closed, Dependency Inversion in particular. BUT actually some of the dependencies might not need to exist, internal implementations could remain so unless extra testing or/usages were needed for sad paths or where behaviour is not easily executable from the public API entry point.
+3 Before concluding the refactor, I did miss some tests paths when not using Rider code coverage tool properly. Simple to rectify and add a few more additional tests (think missing range checks)
+4 The interface files could be squashed into the impl files
+5 The tests could be organised by file and by scenarios
+6 The factory which picks out the datastore could actually be removed and an alternative would be to inject the datastore and this would become a decision at root composition time based on config, the choice would therefore be moved up a level and defined by the host. Yet another alternative may be to introduce something like Polly and on failure of using the normal datastore instead use the fallback datastore.  Arguably the way the logic is now could mean that choosing to be more or less tolerant of failure becomes the purpose of the flag in configuration.
+Yet another alternative is to have a variation of above and host in process fronted by a load balancer of some descripton the normal and fallback variants. A healthcheck could then add and remove these from the lb set. It adds some redundancy but enabling retrying using queuing may also be another approach to help smooth out transient issues.
+7 I did not add validation, consider this 
+8 The Dtos are used as is, this may be a consideration
+9 Account verification could be encapsulated on the account model
+10 If anyone passes this test at L5, lead level, please let me know what was required for my learning.
+
 ### Executing Tests
 Please run:
 
