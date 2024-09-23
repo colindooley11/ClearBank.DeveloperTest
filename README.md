@@ -13,7 +13,8 @@ Yet another alternative is to have a variation of above and host in process fron
 8. I did not add validation, consider this 
 9. The Dtos are used as is, this may be a consideration
 10. Account verification could be encapsulated on the account model
-11. If anyone passes this test at L5, lead level, please let me know what was required for my learning.
+11. I did not mention anything about Transactional consistency, reading and updating the account across anything other than 1 process would need some kind of synchronisation , either pessimistic at the cost of performance (if the same datasource, a transaction scope would facilitate this) or optimistic concurrency, although this may be less desirable as the gap for race conditions widens (we could use conditional validation on writes to enforce balance correctness (i.e not less than 0 balances)
+13. If anyone passes this test at L5, lead level, please let me know what was required for my learning.
 
 ### Executing Tests
 Please run:
